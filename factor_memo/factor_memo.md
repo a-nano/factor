@@ -1,4 +1,4 @@
-#factor memo
+# factor memo
 
 ## auto-use
 自動的に必要なライブラリを読み込む。
