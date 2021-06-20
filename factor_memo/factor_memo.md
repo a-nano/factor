@@ -539,3 +539,48 @@ http://docs.factorcode.org/content/word-__gt__date,formatting.private.html
 
 ---
 
+# factor bi
+
+１つの値に対して２通りの処理（クォーテーション）を適用したそれぞれの結果が欲しい場合はbi
+
+```factor
+IN: scratchpad auto-use 10 [ 2 / ] [ 2 * ] bi
+
+--- Data stack:
+5
+20
+```
+
+２つの値に１つのクォーテーションをそれぞれ適用する場合はbi@
+上のスタックに続けて
+
+```factor
+IN: scratchpad auto-use [ sq ] bi@
+
+--- Data stack:
+25
+400
+```
+
+１つ目の値には１つ目のクォーテーション、２つ目の値には２つ目のクォーテーションを敵湯尾するにはbi*
+
+```factor
+IN: scratchpad auto-use [ 4 * ] [ neg ] bi*
+
+--- Data stack:
+100
+-400
+
+IN: scratchpad auto-use + .
+-300
+```
+
+http://docs.factorcode.org/content/word-bi,kernel.html
+
+http://docs.factorcode.org/content/word-bi__at__,kernel.html
+
+http://docs.factorcode.org/content/word-bi__star__%2Ckernel.html
+
+---
+
+
