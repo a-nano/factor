@@ -342,10 +342,41 @@ http://docs.factorcode.org/content/word-remove%2Csequences.html
 http://docs.factorcode.org/content/word-remove-eq%2Csequences.html
 
 各種エレメントにアクセス
+
 http://docs.factorcode.org/content/article-sequences-access.html
 
 append周り
+
 http://docs.factorcode.org/content/article-sequences-appending.html
+
+---
+
+# factor split
+
+```factor
+IN: scratchpad auto-use "hello,\nmy name is HAL." "\n" split .
+{ "hello," "my name is HAL." }
+IN: scratchpad auto-use "hello,\nmy name is HAL." "\s" split .
+{ "hello,\nmy" "name" "is" "HAL." }
+IN: scratchpad auto-use "hello,\nmy name is HAL." ",.\n" split .
+{ "hello" "" "my name is HAL" "" }
+```
+
+http://docs.factorcode.org/content/word-split,splitting.html
+
+---
+
+# factor concat join
+
+```factor
+IN: scratchpad auto-use { "hello" "my" "name" "is" "SAL" } concat .
+"hellomynameisSAL"
+IN: scratchpad auto-use { "hello" "my" "name" "is" "SAL" } " " join .
+"hello my name is SAL"
+```
+http://docs.factorcode.org/content/word-concat,sequences.html
+
+http://docs.factorcode.org/content/word-join,sequences.html
 
 ---
 
