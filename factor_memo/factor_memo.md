@@ -583,4 +583,61 @@ http://docs.factorcode.org/content/word-bi__star__%2Ckernel.html
 
 ---
 
+# factor remove-duplicates
+
+Lispでいうところのremove-duplicatesに相当するのはuniqueだが、ハッシュを返してくるので、valuesで要素を抜き取る。
+
+```factor
+IN: scratchpad auto-use { 8 8 2 6 } unique values .
+{ 8 2 6 }
+```
+
+---
+
+# factor http-client, http-head, download-to
+
+```factor
+ USE: http.client
+IN: scratchpad auto-use USE: urls
+IN: scratchpad auto-use "http://basicwerk.com/" >url http-head drop .
+T{ response
+    { version "1.1" }
+    { code 200 }
+    { message "OK" }
+    { header
+        H{
+            { "connection" "close" }
+            { "date" "Sun, 20 Jun 2021 06:58:02 GMT" }
+            { "content-length" "1582" }
+            { "content-type" "text/html" }
+            { "server" "nginx" }
+            { "last-modified" "Fri, 30 Nov 2018 05:43:45 GMT" }
+            { "accept-ranges" "bytes" }
+            { "etag" "62e-57bdb4852e640" }
+        }
+    }
+    { cookies { } }
+    { content-type "text/html" }
+    { content-charset "UTF-8" }
+    { content-encoding utf8 }
+    { body "" }
+}
+
+IN: scratchpad auto-use "http://basicwerk.com/" >url http-head drop code>> .
+200
+```
+```
+% mkdir image
+```
+
+```factor
+IN: scratchpad auto-use "http://basicwerk.com/image/bw_SS.png" >url "./image/bw_S.png" download-to
+```
+
+```
+% ls image
+bw_SS.png
+```
+
+---
 
