@@ -57,7 +57,7 @@ TOSは消費される。
 また、f以外はtである。
 空のクォーテーションや空の配列に至ってもtである。
 
-factor```
+```factor
 IN: scratchpad auto-use 1 [ "T" ] [ "F" ] if print
 T
 IN: scratchpad auto-use 0 [ "T" ] [ "F" ] if print
