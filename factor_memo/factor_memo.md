@@ -13,3 +13,17 @@ Added "fry" vocabulary to search path
 ```
 
 https://docs.factorcode.org/content/word-auto-use,parser.html
+
+# Wordの定義を参照する
+\とseeを組み合わせる。
+
+```factor
+IN: scratchpad auto-use \ sq see
+USING: kernel ;
+IN: math
+: sq ( x -- y ) dup * ; inline
+```
+
+http://docs.factorcode.org/content/word-see,see.html
+
+
