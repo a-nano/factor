@@ -152,7 +152,7 @@ http://oss.infoscience.co.jp/factor/docs.factorcode.org/content/article-cookbook
 
 ---
 
-# factor io
+# io
 
 ## with-file-writer
 
@@ -185,7 +185,7 @@ http://docs.factorcode.org/content/word-with-file-reader,io.files.html
 
 ---
 
-# factor regexp
+# regexp
 
 http://docs.factorcode.org/content/article-regexp-intro.html
 
@@ -292,7 +292,7 @@ http://docs.factorcode.org/content/article-command-line.html
 
 ---
 
-# factor array
+# array
 
 多言語でいうところのpushはprefix, suffixを使う。
 
@@ -351,7 +351,7 @@ http://docs.factorcode.org/content/article-sequences-appending.html
 
 ---
 
-# factor split
+# split
 
 ```factor
 IN: scratchpad auto-use "hello,\nmy name is HAL." "\n" split .
@@ -366,7 +366,7 @@ http://docs.factorcode.org/content/word-split,splitting.html
 
 ---
 
-# factor concat join
+# concat join
 
 ```factor
 IN: scratchpad auto-use { "hello" "my" "name" "is" "SAL" } concat .
@@ -392,7 +392,7 @@ hello my name is HAL.
 ```
 ---
 
-# factor max length string
+# max length string
 
 一番長い文字列を取得してみる。
 
@@ -431,7 +431,7 @@ IN: scratchpad auto-use '[ length _ = ] filter .
 
 ---
 
-# factor run-file
+# run-file
 
 FactorのREPLにスクリプトファイルを読み込ませて実行するにはrun-fileを使う。
 
@@ -474,7 +474,7 @@ Hello, Factor-Script!
 
 ---
 
-# factor add-vocab-root
+# add-vocab-root
 
 add-vocab-rootを使うと、任意のpathをボキャブラリの検索パスに追加できる。
 
@@ -521,7 +521,7 @@ http://docs.factorcode.org/content/vocab-vocabs.loader.html
 
 ---
 
-# factor date
+# date
 
 今日の日付をYYYY/MM/DDの形式で表示。
 
@@ -539,7 +539,7 @@ http://docs.factorcode.org/content/word-__gt__date,formatting.private.html
 
 ---
 
-# factor bi
+# bi
 
 １つの値に対して２通りの処理（クォーテーション）を適用したそれぞれの結果が欲しい場合はbi
 
@@ -583,7 +583,7 @@ http://docs.factorcode.org/content/word-bi__star__%2Ckernel.html
 
 ---
 
-# factor remove-duplicates
+# remove-duplicates
 
 Lispでいうところのremove-duplicatesに相当するのはuniqueだが、ハッシュを返してくるので、valuesで要素を抜き取る。
 
@@ -594,7 +594,7 @@ IN: scratchpad auto-use { 8 8 2 6 } unique values .
 
 ---
 
-# factor http-client, http-head, download-to
+# http-client, http-head, download-to
 
 ```factor
  USE: http.client
@@ -641,3 +641,64 @@ bw_SS.png
 
 ---
 
+# http download recover
+
+例えば複数の画像URLが含まれているリストを元にダウンロードしようとしたとき、リスト中のいずれかがエラー（404 Not Foundなど
+になると、HTTP request failedエラーがthrowされてそこで止まってしまう。
+
+```factor
+IN: scratchpad auto-use USE: http.client
+
+! include Bad request
+! "http://basicwerk.com/image/bw_SSxxxxx.png" is not exist.
+IN: scratchpad auto-use { "http://basicwerk.com/image/bw_SSxxxxx.png" "http://basicwerrk.com/image/bw_SS.png" }
+
+--- Data stack:
+{ "http://basicwerk.com/image/bw_SSxxxxx.png"...
+IN: scratchpad auto-use USE: urls
+
+--- Data stack:
+{ "http://basicwerk.com/image/bw_SSxxxxx.png"...
+IN: scratchpad auto-use [ >url download ] each
+```
+
+recoverで囲ってみると、
+
+```factor
+IN: scratchpad auto-use [ >url [ download ] [ ] recover ] each
+
+--- Data stack:
+URL" http://basicwerk.com/image/bw_SSxxxxx.png"
+T{ download-failed f ~response~ }
+URL" http://basicwerrk.com/image/bw_SS.png"
+T{ addrinfo-error f 11001 "そのようなホストは不明です。" }
+```
+
+ダウンロードが失敗するとdownload-failedというTUPLEが返されていることがわかる。
+download-faild?というエラーチェックワードがあるので、これを利用する。
+それと、いきなりdownloadだと、失敗している場合でも同名のファイルがローカルに作られてしまう。これを回避するために、以下の手順にしてみる。
+
+１．一度http-headでファイルの存在を確認する。
+２．エラーが投げられてdownload-failed?がtなら、移行のifの為にfを残す。
+３．recoverを経過した後、ヘッダー情報のTUPLEがTOSにあればtに評価される -> download
+
+コードに直すとこんな感じ。
+
+
+```factor
+IN: scratchpad auto-use { "http://basicwerk.com/image/bw_SSxxxxx.png" "http://basicwerk.com/imaage/bw_SS.png" }
+
+--- Data stack:
+{ "http://basicwerk.com/image/bw_SSxxxxx.png"...
+IN: scratchpad auto-use [ >url dup [ http-head ] [ download-failed? not ] recover [ drop download ] [ 2drop ] if ] each
+```
+
+これで実際には404になる画像はスルーされてeachが続行し、200の画像はちゃんとダウンロードされる。
+
+http://docs.factorcode.org/content/word-recover%2Ccontinuations.html
+
+http://docs.factorcode.org/content/vocab-http.client.html
+
+http://docs.factorcode.org/content/word-download-failed__que__%2Chttp.client.html
+
+---
