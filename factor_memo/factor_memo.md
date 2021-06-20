@@ -380,3 +380,162 @@ http://docs.factorcode.org/content/word-join,sequences.html
 
 ---
 
+# but-last
+
+```factor
+IN: scratchpad auto-use { "hello" "my" "name" "is" "SAL" } but-last "HAL" suffix
+
+--- Data stack:
+{ "hello" "my" "name" "is" "HAL" }
+IN: scratchpad auto-use " " join write "." print
+hello my name is HAL.
+```
+---
+
+# factor max length string
+
+一番長い文字列を取得してみる。
+
+使えるパーツ。
+
+```factor
+IN: scratchpad auto-use "aaa" length .
+3
+IN: scratchpad auto-use 1 2 max .
+2
+IN: scratchpad auto-use { 1 2 3 } 0 [ max ] reduce .
+3
+```
+
+文字列のリストに対してそれぞれの長さのリストをmapで作り、長さの最大値と一致する文字列だけfilterする。
+
+```factor
+IN: scratchpad auto-use { "aaa" "aaab" "aaabc" "aaacd" }
+
+--- Data stack:
+{ "aaa" "aaab" "aaabc" "aaacd" }
+IN: scratchpad auto-use dup [ length ] map
+
+--- Data stack:
+{ "aaa" "aaab" "aaabc" "aaacd" }
+{ 3 4 5 5 }
+IN: scratchpad auto-use 0 [ max ] reduce
+
+--- Data stack:
+{ "aaa" "aaab" "aaabc" "aaacd" }
+5
+! _に5がセットされる
+IN: scratchpad auto-use '[ length _ = ] filter .
+{ "aaabc" "aaacd" }
+```
+
+---
+
+# factor run-file
+
+FactorのREPLにスクリプトファイルを読み込ませて実行するにはrun-fileを使う。
+
+例えばこんなスクリプトがカレントディレクトリにあったとする。
+
+```factor:hello.factor
+USE: io
+IN: hello
+ 
+: hello ( -- )
+    "Hello, Factor-Script!" print
+;
+ 
+hello
+! こう書いてもOK
+! MAIN: hello
+```
+
+これをREPLで読み込んで実行する。
+
+```factor
+IN: scratchpad auto-use "hello.factor" run-file
+Loading hello.factor
+Hello, Factor-Script!
+```
+
+シェルで単にスクリプトを実行したいなら、facgtorに食わせれば良い。
+
+```factor
+% factor hello.factor
+Hello, Factor-Script!
+```
+
+これも同じ。
+
+```factor
+% factor -f hello.factor
+Hello, Factor-Script!
+```
+
+---
+
+# factor add-vocab-root
+
+add-vocab-rootを使うと、任意のpathをボキャブラリの検索パスに追加できる。
+
+```factor
+! カレントディレクトリを検索パスに追加
+IN: scratchpad "." add-vocab-root
+```
+
+USE: / USING: ... ; はボキャブラリ検索パスの中でディレクトリ名とその中においてあるファイル内のIN:宣言見ているようである。
+
+例えば、カレントディレクトリにtestというボキャブラリを構築したい場合はまず同名のディレクトリを作る。
+
+```
+% mkdir test
+```
+
+次に、testディレクトリ内にtest.factorファイルを配置する。
+
+```
+% cd test
+% vi test.factor
+```
+
+例として、test.factorの中に、doubleというワードを定義してみる。
+
+```factor:test.factor
+USING: kernel math ;
+IN: test
+: double ( x -- x' ) dup + ;
+```
+
+REPLに戻って、
+
+```factor
+IN: scratchpad USE: test
+Loading test/test.factor
+! testボキャブラリのロードが完了する
+
+! するとdoubleワードが使える。
+IN: scratchpad 10 double .
+20
+```
+http://docs.factorcode.org/content/vocab-vocabs.loader.html
+
+---
+
+# factor date
+
+今日の日付をYYYY/MM/DDの形式で表示。
+
+```factor
+IN: scratchpad auto-use USE: formatting ! formatting is out of auto-use...
+IN: scratchpad auto-use now [ year>> ] [ month>> ] [ day>> ] tri "%4d/%02d/%02d" sprintf .
+"2021/06/20"
+```
+
+http://hyperpolyglot.org/stack#sprintf
+
+http://hyperpolyglot.org/stack#current-date-time
+
+http://docs.factorcode.org/content/word-__gt__date,formatting.private.html
+
+---
+
