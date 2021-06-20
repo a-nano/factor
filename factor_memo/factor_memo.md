@@ -11,3 +11,5 @@ Added "fry" vocabulary to search path
 10
 
 ```
+
+https://docs.factorcode.org/content/word-auto-use,parser.html
