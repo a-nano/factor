@@ -185,8 +185,6 @@ http://docs.factorcode.org/content/word-with-file-reader,io.files.html
 
 ---
 
----
-
 # factor regexp
 
 http://docs.factorcode.org/content/article-regexp-intro.html
@@ -236,6 +234,8 @@ IN: scratchpad auto-use "sample_regex.txt" ascii file-lines [ R/ ^.+?regex.*?$/ 
 ```
 
 つまり、sed的な使い方をするならre-contains?が適切ということ。
+
+---
 
 ## re-replace
 
