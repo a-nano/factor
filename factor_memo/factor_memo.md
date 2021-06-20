@@ -292,3 +292,60 @@ http://docs.factorcode.org/content/article-command-line.html
 
 ---
 
+# factor array
+
+多言語でいうところのpushはprefix, suffixを使う。
+
+```factor
+IN: scratchpad auto-use { 2 3 } 1 prefix
+
+--- Data stack:
+{ 1 2 3 }
+IN: scratchpad auto-use  4 suffix .
+{ 1 2 3 4 }
+```
+
+http://docs.factorcode.org/content/word-prefix%2Csequences.html
+
+http://docs.factorcode.org/content/word-suffix%2Csequences.html
+
+任意の場所に挿入するにはinsert-nthが使える。
+
+```factor
+ IN: scratchpad auto-use { 1 2 3 4 }
+
+--- Data stack:
+{ 1 2 3 4 }
+IN: scratchpad auto-use '[ 2.5 2 _ insert-nth ] call .
+
+{ 1 2 2.5 3 4 }
+```
+
+http://docs.factorcode.org/content/word-insert-nth%2Csequences.html
+
+削除はremove
+
+```factor
+IN: scratchpad auto-use 1 { 1 2 3 } remove .
+{ 2 3 }
+IN: scratchpad auto-use 2 { 1 2 3 } remove .
+{ 1 3 }
+IN: scratchpad auto-use 2 { 10 20 30 } remove .
+{ 10 20 30 }
+IN: scratchpad auto-use ! remove-eq
+IN: scratchpad auto-use f { 1 t f "aaa" } remove-eq .
+{ 1 t "aaa" }
+```
+
+http://docs.factorcode.org/content/word-remove%2Csequences.html
+
+http://docs.factorcode.org/content/word-remove-eq%2Csequences.html
+
+各種エレメントにアクセス
+http://docs.factorcode.org/content/article-sequences-access.html
+
+append周り
+http://docs.factorcode.org/content/article-sequences-appending.html
+
+---
+
