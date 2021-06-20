@@ -702,3 +702,572 @@ http://docs.factorcode.org/content/vocab-http.client.html
 http://docs.factorcode.org/content/word-download-failed__que__%2Chttp.client.html
 
 ---
+
+# image save
+
+factorは最低限の動作をするのに必要なライブラリをfactor.imageというファイルに保存している。
+auto-useで勝手にUSE: & addしてくれるライブラリはfactor.imageにすでに保存されていいるということ。
+逆に言えば、auto-useで勝手にloadしてくれないライブラリはfactor.imageの外にあるってこと。
+
+よく使うライブラリ（vocab）がfactor.imageに含まれていないのなら、そのライブラリをUSE:した状態（現在のREPL乗でloadが完了している状態）でsaveしてやればよい。
+
+```factor
+IN: scratchpad USING: regexp http.client ;
+Loading ...
+
+IN : scrachpad save
+```
+
+こうすると、factorはfactor.imageを更新する（ライブラリが追加されるので肥大する）。
+よって、auto-useで勝手意に追加されるようになるし、factorでスクリプトを実行する場合なども動作がはやくなる。
+
+http://oss.infoscience.co.jp/factor/concatenative.org/wiki/view/Factor/FAQ/Install/index.html
+
+---
+
+# low level sqlite
+
+http://concatenative.org/wiki/view/Factor/DB
+を参考にsqlite3のDBをFactorがらいじってみる。
+
+Factor 的には Tuple で操作することを押してるみたいなので、ここで紹介するオーソドックスな SQL Statement を使ったやり方は色んな意味で low-lebel ってことになるが・・・。
+
+まずはこれらを USING:
+
+```factor
+IN: scratchpad USING: db.sqlite db io.files io.files.temp destructors ;
+! sqlite3 をよく使うなら save しておこう。
+```
+
+最低限の使い方。
+
+```factor
+! DB につなげる。
+IN: scratchpad "/full-path-to/sample.db" temp-file <sqlite-db> db-open db-connection set
+ 
+! サンプルテーブル
+IN: scratchpad "CREATE TABLE foo (id INTEGER PRIMARY KEY, name, age INTEGER);" sql-command
+IN: scratchpad "INSERT INTO foo VALUES (1, 'Mary', 33), (2, 'Ann', 27), (3, 'John', 69);" sql-command
+ 
+! query
+IN: scratchpad "SELECT * FROM foo;" sql-query .
+{ { "1" "Mary" "33" } { "2" "Ann" "27" } { "3" "John" "69" } }
+```
+
+DBを切り離す。
+
+```factor
+IN: scratchpad db-connection get dispose
+```
+
+もう一つの方法。
+with-dbをつかってopen/closeの手間をなくす。
+
+```factor
+! 使う DB 用にワードを定義しておく
+IN: scratchpad 
+    : with-sample-db ( quot -- )
+		"/full-path-to/sample.db" temp-file <sqlite-db> swap with-db 
+    ; inline
+ 
+IN: scratchpad [ "SELECT * FROM foo;" sql-query . ] with-sample-db
+{ { "1" "Mary" "33" } { "2" "Ann" "27" } { "3" "John" "69" } }
+```
+
+http://docs.factorcode.org/content/article-db-lowlevel-tutorial.html
+
+http://oss.infoscience.co.jp/factor/docs.factorcode.org/content/vocab-db.sqlite.html
+
+http://docs.factorcode.org/content/article-db-tuples-tutorial.html
+
+---
+
+# pathname
+
+http://docs.factorcode.org/content/article-io.pathnames.html
+
+http://docs.factorcode.org/content/vocab-io.pathnames.html
+
+
+---
+
+# branch?, deep-filter
+
+```factor
+IN: scratchpad auto-use { "q" { 1 "16" } } [ [ number? not ]  [ branch? not ] bi  and ] deep-filter .
+{ "q" "16" }
+! as same as
+IN: scratchpad auto-use { "q" { 1 "16" } } [ string? ] deep-filter .
+{ "q" "16" }
+ 
+IN: scratchpad auto-use { "q" { 1 "16" } } [ branch? not ] deep-filter .
+{ "q" 1 "16" }
+! as same as flatten
+IN: scratchpad auto-use { "q" { 1 "16" } } flatten .
+{ "q" 1 "16" }
+ 
+IN: scratchpad auto-use { "q" { 1 "16" } } [ branch? ] deep-filter .
+{ { "q" { 1 "16" } } { 1 "16" } }
+IN: scratchpad auto-use { "q" { 1 "16" } } [ branch? ] deep-filter rest .
+{ { 1 "16" } }
+IN: scratchpad auto-use { "q" { 1 "16" } { 8 "ui" } } [ branch? ] deep-filter rest .
+{ { 1 "16" } { 8 "ui" } }
+ ```
+
+ 
+http://docs.factorcode.org/content/word-branch__que__,sequences.deep.html
+
+http://docs.factorcode.org/content/word-deep-filter,sequences.deep.html
+
+---
+
+# member-if, remove-dup
+
+リスト操作に関してはLisp風のモノの方が慣れているので。
+
+```factor
+! Copyright (C) 2014 Shin Nakamura.
+! See http://factorcode.org/license.txt for BSD license.
+USING: 
+    kernel sequences fry arrays
+    assocs sets
+;
+IN: my-seq
+ 
+! Lisp like. 見つかった elt を car にしたリストを返す
+: member-if ( ... seq quot: ( ... elt -- ... ? ) -- ... subseq )
+    over swap find
+    drop dup
+    [ tail-slice >array ] 
+    [ nip ]
+    if
+; inline
+ 
+! Lisp like. ハッシュではなくリストを返す
+! 順序は保証されない
+: remove-dup ( seq -- seq' )
+    unique values
+;
+```
+# if files
+
+Factorのio関連一覧。
+http://docs.factorcode.org/content/vocab-io.files.html
+
+---
+
+# lexical vars
+
+```factor
+IN: scratchpad auto-use "5" 3 [| m n | m string>number :> m m n + . ] call
+8
+ 
+IN: scratchpad auto-use "5" 3 [| m n | m string>number :> m m ] call
+ 
+--- Data stack:
+5
+```
+
+http://docs.factorcode.org/content/article-locals-examples.html
+
+---
+
+# maplist
+
+```factor
+ { 1 2 3 } dup { } swap prefix swap dup length 1 - [ rest dup '[ _ _ suffix _ ] call ] times drop .
+{ { 1 2 3 } { 2 3 } { 3 } }
+```
+
+---
+
+# tuck
+
+```factor
+! ( a b -- b a b )
+USE: shuffle
+tuck
+```
+
+http://hyperpolyglot.org/stack
+
+---
+
+# subseq?
+
+```factor
+IN: scratchpad auto-use "y" "xyz" subseq? .
+t
+IN: scratchpad auto-use "8" "xyz" subseq? .
+f
+```
+
+http://docs.factorcode.org/content/word-subseq__que__,sequences.html
+
+---
+
+# char, array, string
+
+```factor
+IN: scratchpad auto-use "温故知新" second .
+25925
+ 
+IN: scratchpad auto-use "温故知新" second 1array >string .
+"故"
+ 
+IN: scratchpad auto-use 1 2 "温故知新" subseq .
+"故"
+```
+
+---
+
+# cut-slice, memo
+
+レコードセット(Array)を一定数で分割した配列を作る。
+
+ 
+例: 229295 件あるデータを 49000 件毎に分割する
+
+```factor
+IN: scratchpad auto-use "SELECT id FROM items" sql-query
+--- Data stack:
+{ ~array~ ~array~ ~array~ ~array~ ~array~ ~array~ ~array~...
+ 
+! 割り算の結果を integer で -> /i
+IN: scratchpad auto-use dup length 49000 /i
+ 
+--- Data stack:
+{ ~array~ ~array~ ~array~ ~array~ ~array~ ~array~ ~array~...
+4
+ 
+! cut-slice ( seq n -- before-slice after-slice )
+! after-slice を 49000 で割る ✕ length を割った回数分(times)  
+IN: scratchpad auto-use [ 49000 cut-slice ] times
+ 
+--- Data stack:
+T{ slice f 0 49000 ~array~ }
+T{ slice f 49000 98000 ~array~ }
+T{ slice f 98000 147000 ~array~ }
+T{ slice f 147000 196000 ~array~ }
+T{ slice f 196000 229295 ~array~ }
+ 
+! 最後にスタックに積んだ全ての Slice を Array にまとめる
+IN: scratchpad auto-use { } 4 1 + [ swap suffix ] times 
+ 
+--- Data stack:
+{ ~slice~ ~slice~ ~slice~ ~slice~ ~slice~ }
+```
+ 
+http://docs.factorcode.org/content/word-cut-slice,sequences.html
+
+http://docs.factorcode.org/content/word-__slash__i%2Cmath.html
+
+http://docs.factorcode.org/content/word-times,math.html
+
+ 
+---
+
+# hashtables
+
+```factor
+! hashtable
+IN: scratchpad auto-use SYMBOL: h
+IN: scratchpad auto-use H{ } h set
+ 
+! sample: each-index
+IN: scratchpad auto-use { "one" "two" } [ 1 + swap 2array . ] each-index
+{ 1 "one" }
+{ 2 "two" }
+ 
+! set-at
+IN: scratchpad auto-use { "one" "two" } [ 1 + h get set-at ] each-index
+IN: scratchpad auto-use h get .
+H{ { 1 "one" } { 2 "two" } }
+IN: scratchpad auto-use "three" 3 h get set-at
+IN: scratchpad auto-use h get .
+H{ { 1 "one" } { 2 "two" } { 3 "three" } }
+ 
+! keys
+IN: scratchpad auto-use h get keys .
+{ 1 2 3 }
+ 
+! values
+IN: scratchpad auto-use h get values .
+{ "one" "two" "three" }
+ 
+ 
+! value が "t" で始まる要素のみに filter
+IN: scratchpad auto-use h get keys
+ 
+--- Data stack:
+{ 1 2 3 }
+ 
+IN: scratchpad auto-use [ h get at R/ ^t/i re-contains? ] filter
+ 
+--- Data stack:
+{ 2 3 }
+ 
+IN: scratchpad auto-use [ dup h get at 2array ] map >hashtable
+ 
+--- Data stack:
+H{ { 2 "two" } { 3 "three" } }
+```
+ 
+http://hyperpolyglot.org/stack
+
+http://docs.factorcode.org/content/word-each-index,sequences.html
+
+http://docs.factorcode.org/content/vocab-hashtables.html
+
+---
+
+let and execute
+
+Factorで、歴史家るスコープを作る[| bindings | ... ]という構文ではクオーテーションをスタックに積む。
+
+http://docs.factorcode.org/content/word-[__pipe__,locals.html
+
+よって、実行するにはcallしなければいけない。
+
+```factor
+IN: scratchpad auto-use "aaa" [| str | str print ]
+ 
+--- Data stack:
+"aaa"
+[ 1 load-locals 0 get-local 1 drop-locals print ]
+ 
+! ↑ "aaa" というリテラルとクォーテーションが積まれる。
+ 
+! call で print が実行される
+IN: scratchpad auto-use call
+aaa
+```
+これに対し、[let ... ]というparsing wordを使った構文では、内部の処理はletを抜けた時点で即実行される（クォーテーション化されない）。
+
+http://docs.factorcode.org/content/word-[let,locals.html
+
+```factor
+! これだけで "aaa" が print される
+IN: scratchpad auto-use [let "aaa" :> str str print ]
+aaa
+```
+
+そのた、[letの使い方参考。
+
+```factor
+IN: scratchpad auto-use { "112" "Nakamura" "Shin" }
+ 
+--- Data stack:
+{ "112" "Nakamura" "Shin" }
+ 
+IN: scratchpad auto-use 
+[let :> row 
+    "id:" row first 2array " " join print 
+    row rest "name:" prefix " " join print 
+] 
+id: 112
+name: Nakamura Shin
+ 
+ 
+IN: scratchpad auto-use { "112" "Nakamura" "Shin" }
+ 
+--- Data stack:
+{ "112" "Nakamura" "Shin" }
+ 
+IN: scratchpad auto-use 
+[let :> row 
+    row first :> id 
+    row rest " " join :> name 
+    "id: " write id print 
+    "name: " write name print 
+]
+id: 112
+name: Nakamura Shin
+```
+
+---
+
+# let and quotation
+
+http://basicwerk.com/memoize/20140717155341_factor_let_and_execute.html
+
+続き。
+
+[| binding | ... ]はクォーテーション化されるが、[let ... ]は単なるブロックである。
+
+だからクォーテーションを受け取るようなWordには[let ... ]は使えない。
+
+例：
+
+```factor
+! each のコンテクストでは quotation を期待しているのでこれは error
+IN: scratchpad auto-use { 1 2 3 } [let number>string :> n n print ] each
+Generic word >base does not define a method for the array class.
+Dispatching on object: { 1 2 3 }
+ 
+Type :help for debugging help.
+ 
+! 上記のコンテクストならこう
+IN: scratchpad auto-use { 1 2 3 } [| n | n number>string print ] each
+1
+2
+3
+```
+
+---
+
+# http head
+
+```factor
+! 存在しない url(string)
+IN: scratchpad auto-use "http://basicwerk.com/image/bw_SSxxxxx.png"
+ 
+--- Data stack:
+"http://basicwerk.com/image/bw_SSxxxxx.png"
+ 
+! string -> url
+IN: scratchpad auto-use >url
+ 
+--- Data stack:
+URL" http://basicwerk.com/image/bw_SSxxxxx.png"
+ 
+! url -> head request
+IN: scratchpad auto-use <head-request>
+ 
+--- Data stack:
+T{ request f "HEAD"...
+IN: scratchpad auto-use dup .
+    T{ request
+        { method "HEAD" }
+        { url URL" http://basicwerk.com/image/bw_SSxxxxx.png" }
+        { version "1.1" }
+        { header
+            H{
+                { "user-agent" "Factor http.client" }
+                { "connection" "close" }
+            }
+        }
+        { cookies V{ } }
+        { redirects 10 }
+    }
+ 
+--- Data stack:
+    T{ request f "HEAD"...
+ 
+! recover でエラーをキャッチ
+! エラーの際は response tuple が返されるので
+! response から code を取り出す
+IN: scratchpad auto-use [ http-request drop code>> ] [ response>> code>> nip ] recover
+ 
+--- Data stack:
+404
+```
+
+---
+
+# pair, array, sequence
+
+```factor
+IN: scratchpad auto-use { 1 2 3 4 } pair? .
+f
+ 
+! pair? は2要素の array の時に t
+IN: scratchpad auto-use { 1 2 } pair? .
+t
+ 
+! あくまで array
+IN: scratchpad auto-use "aa" pair? .
+f
+ 
+! "aa" >array -> { 97 97 }
+IN: scratchpad auto-use "aa" >array pair? .
+t
+ 
+! qw{ a a a } -> { "a" "a" "a" }
+IN: scratchpad auto-use qw{ a a a } array? .
+t
+ 
+IN: scratchpad auto-use "aaa" array? .
+f
+ 
+! 文字列は sequence
+IN: scratchpad auto-use "aaa" sequence? .
+t
+ 
+! string? も用意されてる
+IN: scratchpad auto-use "aaa" string? .
+t
+```
+
+---
+
+# regexp white space and parsing word
+
+regexp の parsing word (R/ など) は後ろに「1個以上」のスペースを必要とする。
+
+きっかり1個ではなくて、1個以上のスペースが parsing の為のスペースとみなされる。
+
+ 
+
+例えばこんな文字列があったとする。
+
+```
+"bbb aaa bbb bbb ccc"
+```
+
+先頭がスペースで始まるbbbのみを消したい場合、
+もしこれをsedで書くならこれだけで良い。
+
+```factor
+% sed 's/ bbb//g' <(echo -n "bbb aaa bbb bbb ccc")
+bbb aaa ccc
+```
+
+sedのs/ bbb//gはs/から次の/までが単純に正規表現とみなされるからだ。
+ところがfactorで同じ書き方をすると・・・
+
+```factor
+IN: scratchpad auto-use "bbb aaa bbb bbb ccc" R/  bbb/ "" re-replace .
+" aaa   ccc"
+```
+
+R/のあと、bbbまでの間にある半角スペースは「全て」wordとwordを区切るセパレータとみなされて、bbb直前のスペースは正規表現の一部とはならない。
+よって、対象文字の中間にあるターゲットだけでなく、先頭にあるbbbも消されてしまう（re-replaceは常にグローバル置換を行うため）。
+
+これを回避する方法は２つある。
+
+```factor
+! 正規表現の文字クラス(ブラケット)でホワイトスペースを表現
+IN: scratchpad auto-use "bbb aaa bbb bbb ccc" R/ [ ]bbb/ "" re-replace .
+"bbb aaa ccc"
+ 
+! 文字列から正規表現オブジェクトを生成
+IN: scratchpad auto-use "bbb aaa bbb bbb ccc" " bbb" <regexp> "" re-replace .
+"bbb aaa ccc"
+```
+
+---
+
+# auto-used-vocab
+
+IN: scratchpadのREPLでコードを試して、それではスクリプトにまとめようと思うとき、USING:に列挙しなければいけないボキャブラリを闇雲に探すのは非効率的である。
+
+factorはmanifestというオブジェクト（TUPLE）にUSING:しているvocabの一覧をauto-usedというスロットで格納しているからそれを取り出せばよい。
+
+```factor
+IN: scratchpad auto-use manifest get auto-used>> .
+V{
+    "math.parser"
+    "qw"
+    "regexp"
+    "splitting"
+    "lexer"
+    "vocabs.parser"
+}
+```
+
+http://docs.factorcode.org/content/vocab-vocabs.parser.html
+
+http://docs.factorcode.org/content/word-current-vocab%2Cvocabs.parser.html
+
+---
