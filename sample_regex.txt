@@ -1,0 +1,3 @@
+Number 1 stack
+Number 2 words
+Number 3 regex
